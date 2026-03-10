@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+psycopg2-binary
+elasticsearch
+python-dotenv
+requests
+alembic
+pandas
+numpy
+twilio
+smtplib

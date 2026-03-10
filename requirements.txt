@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+sqlalchemy
+pandas
+psycopg2-binary
+rapidfuzz
+elasticsearch
+python-dotenv
+apache-airflow>=2.7.1

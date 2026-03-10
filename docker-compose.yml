@@ -1,0 +1,110 @@
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: safiri_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: safiri
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
+    container_name: safiri_elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+  backend:
+    build: ./backend
+    container_name: safiri_backend
+    ports:
+      - "8000:8000"
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: safiri
+      ELASTICSEARCH_HOST: elasticsearch
+    depends_on:
+      - postgres
+      - elasticsearch
+
+  frontend:
+    build: ./frontend
+    container_name: safiri_frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  airflow-webserver:
+    image: apache/airflow:2.7.1-python3.11
+    container_name: safiri_airflow_web
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__FERNET_KEY: 'YOUR_FERNET_KEY'
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    volumes:
+      - ./dags:/opt/airflow/dags
+    ports:
+      - "8080:8080"
+    command: webserver
+    restart: always
+
+  airflow-scheduler:
+    image: apache/airflow:2.7.1-python3.11
+    container_name: safiri_airflow_scheduler
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__FERNET_KEY: 'YOUR_FERNET_KEY'
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    volumes:
+      - ./dags:/opt/airflow/dags
+    command: scheduler
+    restart: always
+    depends_on:
+      - airflow-webserver
+      - postgres
+
+  sms-service:
+    build: ./services/sms-service
+    container_name: safiri_sms
+    environment:
+      TWILIO_ACCOUNT_SID: your_sid
+      TWILIO_AUTH_TOKEN: your_token
+    depends_on:
+      - backend
+
+  whatsapp-service:
+    build: ./services/whatsapp-service
+    container_name: safiri_whatsapp
+    environment:
+      WHATSAPP_API_KEY: your_key
+    depends_on:
+      - backend
+
+  email-service:
+    build: ./services/email-service
+    container_name: safiri_email
+    environment:
+      EMAIL_HOST: smtp.example.com
+      EMAIL_USER: user@example.com
+      EMAIL_PASS: secret
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  es_data:
