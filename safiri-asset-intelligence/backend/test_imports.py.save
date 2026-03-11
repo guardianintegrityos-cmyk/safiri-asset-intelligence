@@ -1,0 +1,43 @@
+
+#!/usr/bin/env python3
+"""
+Test script to verify that all imports work correctly
+"""
+
+def test_imports():
+    """Test that all critical modules can be imported"""
+    try:
+        # Test main app
+        from main import app
+        print("✓ main.py imports successful")
+
+        # Test schemas
+        from app.schemas import IdentityCoreSchema
+        print("✓ schemas.py imports successful")
+
+        # Test federation service
+        from app.services.federation_service import federation_service
+        print("✓ federation_service.py imports successful")
+
+        # Test identity engine components
+        from app.services.identity_engine.engine import identity_resolution_engine
+        from app.services.identity_engine.matcher import identity_matcher
+        from app.services.identity_engine.clusterer import identity_clusterer
+        from app.services.identity_engine.api import router
+        print("✓ identity-engine imports successful")
+
+        return True
+
+    except ImportError as e:
+        print(f"✗ Import error: {e}")
+        return False
+    except Exception as e:
+        print(f"✗ Other error: {e}")
+        return False
+
+if __name__ == "__main__":
+    print("Testing Safiri imports...")
+    if test_imports():
+        print("\n🎉 All imports successful!")
+    else:
+        print("\n❌ Some imports failed.")
