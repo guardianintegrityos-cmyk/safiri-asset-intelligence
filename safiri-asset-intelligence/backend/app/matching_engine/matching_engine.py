@@ -15,13 +15,28 @@ except ImportError:
         def search(self, **kwargs):
             return {"hits": {"hits": []}}
 
-from fuzzy_match import fuzzy_name_match
+from .fuzzy_match import fuzzy_name_match
 from typing import List, Optional
 
-if ELASTICSEARCH_AVAILABLE:
-    es = Elasticsearch()
-else:
-    es = Elasticsearch()
+# Initialize Elasticsearch with configuration
+try:
+    if ELASTICSEARCH_AVAILABLE:
+        try:
+            es = Elasticsearch(hosts=["localhost:9200"])
+        except Exception:
+            # If local Elasticsearch is not available, use mock
+            class MockElasticsearch:
+                def search(self, **kwargs):
+                    return {"hits": {"hits": []}}
+            es = MockElasticsearch()
+    else:
+        es = Elasticsearch()
+except Exception:
+    # Fallback to mock Elasticsearch
+    class MockElasticsearch:
+        def search(self, **kwargs):
+            return {"hits": {"hits": []}}
+    es = MockElasticsearch()
 
 WEIGHTS = {
     'id_number': 0.9,
